@@ -2,11 +2,11 @@
 
 ObsPlan is a batch tool for planning observations at Bayfordbury, designed to supplement the target checker on our website.
 
-You can provide a list of targets, and specify a date range, then it will generate airmass plots for all of the requested targets and dates.
+You can provide a list of targets, and specify a date range, then it will generate altitude plots for all of the requested targets and dates.
 
-The current version has limited functionality, so it only works for deep sky objects. A future version will support Solar System objects (planets, asteroids & comets).
+The current version has limited functionality, so it only works for deep sky objects. A future version will support Solar System objects (planets, asteroids & comets). 
 
-You can download it from the [releases page.](https://github.com/bayfordbury-observatory/ObsPlan/releases)
+You can download it from the [releases page.](https://github.com/bayfordbury-observatory/ObsPlan/releases) Please send us any feedback or suggestions!
 
 ## Using ObsPlan-DSO.py
 
@@ -44,7 +44,7 @@ end_date = "2025-05-01 12:00"
 step_size = 7  # Days`
 ```
 
-This will create an airmass plot and parameter table for every 7th night from 2025-03-01 to 2025-05-01. If you change it to `step_size = 1`, it will generate a plot for every night. This is OK for short date ranges, but for longer ranges (>1 month), it is sensible to increase the step size. Otherwise, the script will take a long time to run and you will have hundreds of plots to sort through. 
+This will create an altitude plot and parameter table for every 7th night from 2025-03-01 to 2025-05-01. If you change it to `step_size = 1`, it will generate a plot for every night. This is OK for short date ranges, but for longer ranges (>1 month), it is sensible to increase the step size. Otherwise, the script will take a long time to run and you will have hundreds of plots to sort through. 
 
 Edit `start_date` and `end_date`, changing the dates but keeping the time at 12:00. Once you have done this, you are ready to run the code.
 
