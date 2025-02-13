@@ -1,3 +1,6 @@
+####################################################################################################
+#Import required packages
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -9,14 +12,28 @@ from astroplan.plots import plot_altitude
 import astropy.units as u
 from astroquery.simbad import Simbad
 from datetime import datetime
+import os
 
-# Input start and end dates in ISO format
+####################################################################################################
+# Edit these variables to set the date range and target file. Everything after this section can be left alone.
+
+# Input start and end dates, in ISO format (YYYY-MM-DD HH:MM)
 start_date = "2025-03-01 12:00"
-end_date = "2025-05-01 12:00"  # Changed to include two dates for demonstration
+end_date = "2025-05-01 12:00"
 step_size = 7  # Days
 
-# Input targets
+# Specify target file
 targets_file = "targets.txt"
+
+####################################################################################################
+# Create output directory, named after current time, to store plots
+
+current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+output_dir = f"plots/{current_time}"
+os.makedirs(output_dir, exist_ok=True)
+
+####################################################################################################
+# Defining various functions
 
 # Function to read targets from a file
 def read_targets_from_file(filename):
@@ -33,21 +50,17 @@ def get_magnitude(target_name):
         return mag if mag != '--' else None
     return None
 
-# Create output directory with current time
-current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-output_dir = f"plots/{current_time}"
-os.makedirs(output_dir, exist_ok=True)
-
+# Function to create and save visibility duration plot
 def create_visibility_duration_plot(dates, all_visibility_hours, targets):
     plt.figure(figsize=(14, 8))
     
-    # Define a set of distinct markers
+    # Define a set of distinct markers (for best readability)
     markers = ['>','o','.', 's', '^', 'D', 'v', '>', 'X', 'D', 'P','<']
-    # Extend markers list if more targets than markers
+    # Extend markers list if more targets than defined markers 
     while len(markers) < len(targets):
         markers.extend(markers)
     
-    # Generate color cycle matching the main plot
+    # Generate color cycle that will match the airmass plot
     colors = plt.cm.rainbow(np.linspace(0, 1, len(targets)))
     
     # Plot visibility hours for each target with different markers
@@ -70,7 +83,7 @@ def create_visibility_duration_plot(dates, all_visibility_hours, targets):
     
     # Save the plot
     plt.tight_layout()
-    plt.savefig(f'{output_dir}'"/visibility_duration.png", bbox_inches='tight')
+    plt.savefig(f'{output_dir}/visibility_duration.png', bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -92,7 +105,7 @@ def create_visibility_table(night, visible_targets, visibility_hours, max_altitu
 
     # Calculate the height of the table based on the number of rows
     num_rows = len(table_data)
-    row_height = 0.05  # Adjust this value to change the height of each row
+    row_height = 0.05 
     table_height = row_height * num_rows
 
     # Create a new figure for the table
@@ -118,14 +131,17 @@ def create_visibility_table(night, visible_targets, visibility_hours, max_altitu
             cell.set_text_props(fontsize='12')
     # Adjust layout
     table_fig.tight_layout()
-    plt.savefig(f'{output_dir}'"/"f'{night.iso.split()[0]}_info.png', bbox_inches='tight')
+    plt.savefig(f'{output_dir}/{night.iso.split()[0]}_info.png', bbox_inches='tight')
     plt.show()
     plt.close(table_fig)
+
+####################################################################################################
+# Main script
 
 # Read targets from file
 targets = read_targets_from_file(targets_file)
 
-# Define observing site
+# Define observing site 
 observatory_name = "Bayfordbury"
 obs_location = EarthLocation(lat=51.775 * u.deg, lon=-0.09 * u.deg, height=66 * u.m)
 observer = Observer(location=obs_location, name=observatory_name, timezone="UTC")
@@ -134,18 +150,20 @@ observer = Observer(location=obs_location, name=observatory_name, timezone="UTC"
 start_jd = Time(start_date, format='iso').jd
 end_jd = Time(end_date, format='iso').jd
 
-# Create array of Julian Dates
+# Create array of Julian dates between start and end dates
 julian_dates = np.arange(start_jd, end_jd + 1, step_size)
 
 # Initialize lists and dictionaries for storing data across all dates
 plot_dates = []
 visibility_data = {}
 
-# Define a set of distinct markers for the altitude plots
+# Define a set of distinct markers for the airmass plots
 altitude_markers = ['>','o','.', 's', '^', 'D', 'v', '>', 'X', 'D', 'P','<']
+# Extend the list if more targets than defined markers
 while len(altitude_markers) < len(targets):
     altitude_markers.extend(altitude_markers)
 
+# Main loop
 # Loop over each day
 for jd in julian_dates:
     night = Time(jd, format='jd')
@@ -163,7 +181,7 @@ for jd in julian_dates:
     start_time = night_midpoint - 7.5 * u.hour
     end_time = night_midpoint + 7.5 * u.hour
 
-    # Create time grids
+    # Create time grids (low res and high res for efficiency)
     time_grid = time_grid_from_range([start_time, end_time], time_resolution=20 * u.minute)
     time_grid_hires = time_grid_from_range([start_time, end_time], time_resolution=1 * u.minute)
 
@@ -183,7 +201,7 @@ for jd in julian_dates:
     # Set up main plot
     fig, ax1 = plt.subplots(figsize=(14, 10))
     
-    # Generate color cycle
+    # Generate colour cycle
     colors = plt.cm.rainbow(np.linspace(0, 1, len(targets)))
 
     # Dictionaries to store data
@@ -215,6 +233,7 @@ for jd in julian_dates:
         visibility_mask = (targ_alt_hires >= 20) & (sun_alt <= -18)
         visible_times = targ_times_hires[visibility_mask]
 
+        # If visible, plot and store data
         if len(visible_times) > 0:
             hours_visible = (visible_times[-1] - visible_times[0]).total_seconds() / 3600
             visibility_hours[target_name] = hours_visible
@@ -248,23 +267,23 @@ for jd in julian_dates:
     # Store visibility hours for this date
     visibility_data[current_date] = visibility_hours.copy()
     
-     # Skip if no targets are visible
+    # Skip date if no targets are visible
     if not visible_targets:
         plt.close(fig)
         continue
 
-    # Plot moon with distinctive dashed line
+    # Plot moon elevation with distinctive dashed line
     moon_line = ax1.plot(targ_times, moon_alt, color='gray', ls="--", 
                         marker='o', markevery=5, markersize=0)[0]
     legend_handles.append(moon_line)
     legend_labels.append("Moon")
 
     # Add twilight shading
-    ax1.fill_between(targ_times_hires, 0, 90, sun_alt > 0, color="yellow", zorder=0, alpha=0.4)
-    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < 0, color="cornflowerblue", zorder=0, alpha=0.4)
-    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < -6, color="blue", zorder=-1, alpha=0.4)
-    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < -12, color="navy", zorder=0, alpha=0.4)
-    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < -18, color="black", zorder=0, alpha=1)
+    ax1.fill_between(targ_times_hires, 0, 90, sun_alt > 0, color="yellow", zorder=0, alpha=0.4) # Daylight
+    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < 0, color="cornflowerblue", zorder=0, alpha=0.4) # Civil twilight
+    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < -6, color="blue", zorder=-1, alpha=0.4) # Nautical twilight
+    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < -12, color="navy", zorder=0, alpha=0.4) # Astronomical twilight
+    ax1.fill_between(targ_times_hires, 0, 90, sun_alt < -18, color="black", zorder=0, alpha=1) # Night
 
     # Configure x-axis
     ax1.xaxis.set_major_locator(mdates.HourLocator(interval=2))
@@ -275,16 +294,23 @@ for jd in julian_dates:
     ax1.set_ylabel("Altitude (deg)", fontsize=12)
     ax1.set_xlabel("Time (UTC)", fontsize=12)
     ax1.tick_params(labelbottom=True, top=True)
+    #Precomputed airmass labels
+    ax2 = ax1.twinx()
+    ax2.set_yticks([1,0.726444696,0.627141002,0.558720697,0.506496571,0.464559054,0.333333333,0.216346895,0.160861246,0.128188433],['1','1.1','1.2','1.3','1.4','1.5','2','3','4','5'])
+    ax2.set_ylabel("Airmass", fontsize=12)
 
     # Add legend
-    ax1.legend(legend_handles, legend_labels, loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.savefig(f'{output_dir}'"/"f'{night.iso.split()[0]}_airm.png', bbox_inches='tight')
+    ax1.legend(legend_handles, legend_labels, loc='center left', bbox_to_anchor=(1.05, 0.5))
+    plt.savefig(f'{output_dir}/{night.iso.split()[0]}_custom_scale.png', bbox_inches='tight')
     plt.show()
     plt.close(fig)
-
 
     # Create and save table for this date
     create_visibility_table(night, visible_targets, visibility_hours, max_altitudes, apparent_magnitudes, min_lunar_separations)
 
+# End of main loop
+
 # Create visibility duration plot after processing all dates
 create_visibility_duration_plot(plot_dates, visibility_data, targets)
+
+
