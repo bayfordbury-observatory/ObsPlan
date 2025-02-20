@@ -18,8 +18,8 @@ import os
 # Edit these variables to set the date range and target file. Everything after this section can be left alone.
 
 # Input start and end dates, in ISO format (YYYY-MM-DD HH:MM)
-start_date = "2025-03-01 12:00"
-end_date = "2025-05-01 12:00"
+start_date = "2025-09-01 12:00"
+end_date = "2025-12-01 12:00"
 step_size = 7  # Days
 
 # Specify target file
@@ -193,11 +193,12 @@ for jd in julian_dates:
     sun_altaz = get_sun(time_grid_hires).transform_to(frame_hires)
     sun_alt = sun_altaz.alt.deg
 
-    # Calculate Moon's position
+    # Calculate Moon's position + phase
     moon_altaz = get_body("moon", time_grid).transform_to(frame)
     moon_alt = moon_altaz.alt.deg
     moon_az = moon_altaz.az.deg
-    
+    lunar_illumination = moon_illumination(night) * 100  # Convert to percentage
+
     # Set up main plot
     fig, ax1 = plt.subplots(figsize=(14, 10))
     
@@ -290,7 +291,7 @@ for jd in julian_dates:
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
 
     # Add labels and title
-    ax1.set_title(f"Target Visibility - {night.iso.split()[0]}", fontsize=16)
+    ax1.set_title(f"Target Visibility - {night.iso.split()[0]}          Lunar illumination: {lunar_illumination:.1f}%", fontsize=16)
     ax1.set_ylabel("Altitude (deg)", fontsize=12)
     ax1.set_xlabel("Time (UTC)", fontsize=12)
     ax1.tick_params(labelbottom=True, top=True)
@@ -301,7 +302,7 @@ for jd in julian_dates:
 
     # Add legend
     ax1.legend(legend_handles, legend_labels, loc='center left', bbox_to_anchor=(1.05, 0.5))
-    plt.savefig(f'{output_dir}/{night.iso.split()[0]}_custom_scale.png', bbox_inches='tight')
+    plt.savefig(f'{output_dir}/{night.iso.split()[0]}_airm.png', bbox_inches='tight')
     plt.show()
     plt.close(fig)
 
